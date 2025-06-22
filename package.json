@@ -1,7 +1,7 @@
 {
-  "name": "meal-suggestion-bot",
+  "name": "jeemo",
   "version": "0.0.1",
-  "description": "",
+  "description": "Jeemo - Smart meal planning and recipe suggestion Telegram bot",
   "author": "",
   "private": true,
   "license": "UNLICENSED",

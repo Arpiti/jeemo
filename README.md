@@ -1,6 +1,6 @@
-# 🥘 Smart Meal Suggestion Bot
+# 🤖 Jeemo - Smart Meal Planning Bot
 
-A multilingual WhatsApp/Telegram bot that suggests personalized meal recipes based on user preferences, available ingredients, and cuisine choices. Built with NestJS, OpenAI, and powered by the Telegram Bot API.
+A multilingual Telegram bot that suggests personalized meal recipes based on user preferences, available ingredients, and cuisine choices. Built with NestJS, OpenAI, and powered by the Telegram Bot API.
 
 ## 🌟 Features
 
@@ -39,7 +39,7 @@ User ↔ Telegram Bot ↔ NestJS Application
 1. **Clone and install dependencies**
    ```bash
    git clone <repository-url>
-   cd meal-suggestion-bot
+   cd jeemo
    npm install
    ```
 

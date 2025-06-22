@@ -1,3 +1,13 @@
+#!/bin/bash
+
+# Setup git repository for Jeemo
+cd "$(dirname "$0")"
+
+echo "Initializing git repository..."
+git init
+
+echo "Adding .gitignore..."
+cat > .gitignore << EOF
 # Dependencies
 node_modules/
 npm-debug.log*
@@ -113,3 +123,21 @@ dump.rdb
 .Trashes
 ehthumbs.db
 Thumbs.db
+EOF
+
+echo "Adding all files to git..."
+git add .
+
+echo "Creating initial commit..."
+git commit -m "Initial commit: Jeemo meal planning bot
+
+🤖 Generated with [Claude Code](https://claude.ai/code)
+
+Co-Authored-By: Claude <noreply@anthropic.com>"
+
+echo "Git repository setup complete!"
+echo "Next steps:"
+echo "1. Create a GitHub repository named 'jeemo'"
+echo "2. Run: git remote add origin https://github.com/YOUR_USERNAME/jeemo.git"
+echo "3. Run: git branch -M main"
+echo "4. Run: git push -u origin main"
