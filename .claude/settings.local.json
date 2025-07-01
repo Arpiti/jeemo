@@ -1,7 +1,14 @@
 {
   "permissions": {
     "allow": [
-      "Bash(pkill:*)"
+      "Bash(pkill:*)",
+      "Bash(npx create-next-app:*)",
+      "Bash(mkdir:*)",
+      "Bash(mv:*)",
+      "Bash(rmdir:*)",
+      "Bash(npm run build:*)",
+      "Bash(cp:*)",
+      "Bash(ls:*)"
     ],
     "deny": []
   }

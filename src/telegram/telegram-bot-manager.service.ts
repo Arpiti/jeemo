@@ -2,8 +2,8 @@ import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { Telegraf, Context } from 'telegraf';
 import { TelegramService } from './telegram.service';
-import { SessionService } from '../services/session.service';
-import { RecipeService } from '../services/recipe.service';
+import { SessionService } from '../common/session.service';
+import { RecipeService } from '../common/recipe.service';
 
 export interface BotConfig {
   token: string;

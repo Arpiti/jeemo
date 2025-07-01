@@ -1,8 +1,8 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { Telegraf, Context, Markup } from 'telegraf';
-import { SessionService } from '../services/session.service';
-import { RecipeService } from '../services/recipe.service';
+import { SessionService } from '../common/session.service';
+import { RecipeService } from '../common/recipe.service';
 import {
   ConversationStep,
   MealType,
