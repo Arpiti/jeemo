@@ -135,7 +135,7 @@ src/
 ### Key Services
 
 - **SessionService**: Manages user conversation state with Redis/in-memory storage
-- **OpenAIService**: Generates recipes using GPT-3.5-turbo with structured prompts
+- **GeminiService**: Generates recipes using GPT-3.5-turbo with structured prompts
 - **YouTubeService**: Searches for recipe tutorial videos
 - **RecipeService**: Orchestrates recipe generation and formatting
 - **TelegramService**: Handles bot interactions and conversation flow

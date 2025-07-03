@@ -1,4 +1,4 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { BadRequestException, Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { Telegraf, Context, Markup } from 'telegraf';
 import { SessionService } from '../common/session.service';
@@ -508,9 +508,7 @@ export class TelegramService {
         });
         this.logger.log(`Telegram bot started with webhook: ${webhookUrl}`);
       } else {
-        // Use polling mode
-        await this.bot.launch();
-        this.logger.log('Telegram bot started with polling');
+        throw new BadRequestException(`No ngrok URL or server URL found`);
       }
     } catch (error) {
       this.logger.error('Failed to start Telegram bot', error);

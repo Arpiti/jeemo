@@ -135,7 +135,7 @@ interface Recipe {
 export class RecipeService {
   async generateRecipes(session: UserSession): Promise<Recipe[]> {
     // 1. Generate recipes using OpenAI
-    const recipes = await this.openaiService.generateRecipes({
+    const recipes = await this.GeminiService.generateRecipes({
       mealType: session.mealType,
       dietType: session.dietType,
       ingredients: session.ingredients,
@@ -159,7 +159,7 @@ export class RecipeService {
 ### OpenAI Service
 ```typescript
 @Injectable()
-export class OpenAIService {
+export class GeminiService {
   async generateRecipes(params: RecipeGenerationParams): Promise<Recipe[]> {
     const prompt = this.buildPrompt(params);
     

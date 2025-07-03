@@ -8,7 +8,8 @@
       "Bash(rmdir:*)",
       "Bash(npm run build:*)",
       "Bash(cp:*)",
-      "Bash(ls:*)"
+      "Bash(ls:*)",
+      "Bash(npm start)"
     ],
     "deny": []
   }

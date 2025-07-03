@@ -1,5 +1,5 @@
 import { Injectable, Logger } from '@nestjs/common';
-import { OpenAIService } from './openai.service';
+import { GeminiService } from './gemini.service';
 import { YouTubeService } from './youtube.service';
 import { Recipe } from '../types/recipe.interface';
 import { UserSession } from '../types/session.interface';
@@ -9,7 +9,7 @@ export class RecipeService {
   private readonly logger = new Logger(RecipeService.name);
 
   constructor(
-    private openaiService: OpenAIService,
+    private GeminiService: GeminiService,
     private youtubeService: YouTubeService,
   ) {}
 
@@ -18,7 +18,7 @@ export class RecipeService {
       this.logger.log(`Generating recipes for user ${session.userId}`);
 
       // 1. Generate recipes using OpenAI
-      const recipes = await this.openaiService.generateRecipes({
+      const recipes = await this.GeminiService.generateRecipes({
         mealType: session.mealType || 'lunch',
         dietType: session.dietType || 'vegetarian',
         ingredients: session.ingredients,

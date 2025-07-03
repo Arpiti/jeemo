@@ -16,11 +16,11 @@ async function bootstrap() {
     const botConfigs = getBotConfigurations();
     const useWebhooks = process.env.USE_WEBHOOKS === 'true';
 
-    if (botConfigs.length === 0) {
-      throw new Error(
-        'No bot tokens configured. Please set TELEGRAM_BOT_TOKEN',
-      );
-    }
+    // if (botConfigs.length === 0) {
+    //   throw new Error(
+    //     'No bot tokens configured. Please set TELEGRAM_BOT_TOKEN',
+    //   );
+    // }
 
     if (botConfigs.length === 1 && !useWebhooks) {
       // Single bot with polling (original behavior)
@@ -50,42 +50,44 @@ async function bootstrap() {
     }
 
     // Start the HTTP server
-    const port = process.env.PORT ?? 3000;
-    await app.listen(port);
-    logger.log(`Application is running on port ${port}`);
-    logger.log(`Webhook mode: ${useWebhooks ? 'enabled' : 'disabled'}`);
-    logger.log(`Number of bots: ${botConfigs.length}`);
+    // const port = process.env.PORT ?? 3000;
 
-    // Graceful shutdown
-    process.once('SIGINT', async () => {
-      logger.log('Received SIGINT, shutting down gracefully...');
+    // logger.log(`Application is running on port ${port}`);
+    // logger.log(`Webhook mode: ${useWebhooks ? 'enabled' : 'disabled'}`);
+    // logger.log(`Number of bots: ${botConfigs.length}`);
 
-      if (botConfigs.length === 1 && !useWebhooks) {
-        const telegramService = app.get(TelegramService);
-        await telegramService.stopBot();
-      } else {
-        const botManager = app.get(TelegramBotManagerService);
-        await botManager.stopAllBots();
-      }
+    // await app.listen(port);
 
-      await app.close();
-      process.exit(0);
-    });
+    // // Graceful shutdown
+    // process.once('SIGINT', async () => {
+    //   logger.log('Received SIGINT, shutting down gracefully...');
 
-    process.once('SIGTERM', async () => {
-      logger.log('Received SIGTERM, shutting down gracefully...');
+    //   if (botConfigs.length === 1 && !useWebhooks) {
+    //     const telegramService = app.get(TelegramService);
+    //     await telegramService.stopBot();
+    //   } else {
+    //     const botManager = app.get(TelegramBotManagerService);
+    //     await botManager.stopAllBots();
+    //   }
 
-      if (botConfigs.length === 1 && !useWebhooks) {
-        const telegramService = app.get(TelegramService);
-        await telegramService.stopBot();
-      } else {
-        const botManager = app.get(TelegramBotManagerService);
-        await botManager.stopAllBots();
-      }
+    //   await app.close();
+    //   process.exit(0);
+    // });
 
-      await app.close();
-      process.exit(0);
-    });
+    // process.once('SIGTERM', async () => {
+    //   logger.log('Received SIGTERM, shutting down gracefully...');
+
+    //   if (botConfigs.length === 1 && !useWebhooks) {
+    //     const telegramService = app.get(TelegramService);
+    //     await telegramService.stopBot();
+    //   } else {
+    //     const botManager = app.get(TelegramBotManagerService);
+    //     await botManager.stopAllBots();
+    //   }
+
+    //   await app.close();
+    //   process.exit(0);
+    // });
   } catch (error) {
     logger.error('Failed to start application', error);
     process.exit(1);
