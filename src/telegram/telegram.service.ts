@@ -42,7 +42,6 @@ export class TelegramService {
 
   private setupHandlers(bot?: Telegraf) {
     const targetBot = bot || this.bot;
-    
     // Start command
     targetBot.start(async (ctx) => {
       await this.handleStart(ctx);
@@ -74,7 +73,7 @@ export class TelegramService {
     // Clear existing session and start fresh
     await this.sessionService.clearSession(userId);
 
-    await this.showLanguageSelection(ctx, userId);
+    await this.showLanguageSelection(ctx);
   }
 
   async handleTextMessage(ctx: Context) {
@@ -82,12 +81,14 @@ export class TelegramService {
     if (!userId) return;
 
     const session = await this.sessionService.getSession(userId);
-    const text = ctx.message?.['text'] || '';
+    const text =
+      typeof ctx.message?.['text'] === 'string' ? ctx.message['text'] : '';
 
     // Handle custom ingredient input
     if (
-      session.step === ConversationStep.INGREDIENTS &&
+      session?.step === ConversationStep.INGREDIENTS &&
       text &&
+      typeof text === 'string' &&
       !text.startsWith('/')
     ) {
       await this.handleCustomIngredient(ctx, userId, text);
@@ -95,50 +96,56 @@ export class TelegramService {
     }
 
     // For other steps, guide user to use buttons
-    const message = getLocalizedMessage('error_message', session.language);
+    const message = getLocalizedMessage('error_message', session?.language);
     await ctx.reply(message);
   }
 
   async handleCallbackQuery(ctx: Context) {
     const userId = ctx.from?.id?.toString();
-    if (!userId || !ctx.callbackQuery?.['data']) return;
+    const callbackData =
+      ctx.callbackQuery && typeof ctx.callbackQuery['data'] === 'string'
+        ? ctx.callbackQuery['data']
+        : undefined;
+    if (!userId || !callbackData) return;
 
-    const data = ctx.callbackQuery['data'];
     const session = await this.sessionService.getSession(userId);
 
     try {
       // Answer the callback query to stop loading
       await ctx.answerCbQuery();
 
-      switch (session.step) {
+      switch (session?.step) {
         case ConversationStep.LANGUAGE:
-          await this.handleLanguageCallback(ctx, userId, data);
+          await this.handleLanguageCallback(ctx, userId, callbackData);
           break;
         case ConversationStep.MEAL:
-          await this.handleMealCallback(ctx, userId, data);
+          await this.handleMealCallback(ctx, userId, callbackData);
           break;
         case ConversationStep.DIET:
-          await this.handleDietCallback(ctx, userId, data);
+          await this.handleDietCallback(ctx, userId, callbackData);
           break;
         case ConversationStep.INGREDIENTS:
-          await this.handleIngredientsCallback(ctx, userId, data);
+          await this.handleIngredientsCallback(ctx, userId, callbackData);
           break;
         case ConversationStep.CUISINE:
-          await this.handleCuisineCallback(ctx, userId, data);
+          await this.handleCuisineCallback(ctx, userId, callbackData);
           break;
         case ConversationStep.RECIPES:
-          await this.handleRecipeCallback(ctx, userId, data);
+          await this.handleRecipeCallback(ctx, userId, callbackData);
           break;
         default:
           await this.handleStart(ctx);
       }
     } catch (error) {
-      this.logger.error(`Error handling callback query: ${data}`, error);
-      await ctx.reply(getLocalizedMessage('error_message', session.language));
+      this.logger.error(
+        `Error handling callback query: ${callbackData}`,
+        error,
+      );
+      await ctx.reply(getLocalizedMessage('error_message', session?.language));
     }
   }
 
-  private async showLanguageSelection(ctx: Context, userId: string) {
+  private async showLanguageSelection(ctx: Context) {
     const keyboard = Markup.inlineKeyboard([
       [Markup.button.callback('🇺🇸 English', 'lang_en')],
       [Markup.button.callback('🇮🇳 हिंदी', 'lang_hi')],
@@ -206,15 +213,29 @@ export class TelegramService {
     await this.showIngredientSelection(ctx, session);
   }
 
-  private async showIngredientSelection(ctx: Context, session) {
-    const ingredients = getIngredientsForMealAndDiet(
-      session.mealType,
-      session.dietType,
-    );
+  private async showIngredientSelection(
+    ctx: Context,
+    session: Record<string, any>,
+  ) {
+    const mealType =
+      session && typeof session.mealType === 'string'
+        ? (session.mealType as MealType)
+        : MealType.LUNCH;
+    const dietType =
+      session && typeof session.dietType === 'string'
+        ? (session.dietType as DietType)
+        : DietType.VEGETARIAN;
+    const language =
+      session && typeof session.language === 'string' ? session.language : 'en';
+    const ingredientsArr = Array.isArray(session?.ingredients)
+      ? session.ingredients
+      : [];
+
+    const ingredients = getIngredientsForMealAndDiet(mealType, dietType);
     const buttons: any[] = [];
 
-    // Create ingredient buttons (2 per row)
-    for (let i = 0; i < Math.min(ingredients.length, 20); i += 2) {
+    // Create ingredient buttons (3 per row)
+    for (let i = 0; i < ingredients.length; i += 3) {
       const row = [
         Markup.button.callback(ingredients[i], `ingredient_${ingredients[i]}`),
       ];
@@ -226,33 +247,45 @@ export class TelegramService {
           ),
         );
       }
+      if (ingredients[i + 2]) {
+        row.push(
+          Markup.button.callback(
+            ingredients[i + 2],
+            `ingredient_${ingredients[i + 2]}`,
+          ),
+        );
+      }
       buttons.push(row);
     }
 
     // Add action buttons
     buttons.push([
       Markup.button.callback(
-        getLocalizedMessage('custom_ingredient', session.language),
+        getLocalizedMessage('custom_ingredient', language),
         'ingredient_custom',
       ),
     ]);
     buttons.push([
       Markup.button.callback(
-        getLocalizedMessage('done', session.language),
+        getLocalizedMessage('done', language),
         'ingredient_done',
       ),
     ]);
 
     const keyboard = Markup.inlineKeyboard(buttons);
     const selectedText =
-      session.ingredients.length > 0
-        ? `\n\nSelected: ${session.ingredients.join(', ')}`
+      ingredientsArr.length > 0
+        ? `\n\nSelected: ${ingredientsArr.join(', ')}`
         : '';
 
     const message =
-      getLocalizedMessage('ingredient_selection', session.language) +
-      selectedText;
-    await ctx.editMessageText(message, keyboard);
+      getLocalizedMessage('ingredient_selection', language) + selectedText;
+
+    if (ctx.updateType === 'callback_query') {
+      await ctx.editMessageText(message, keyboard);
+    } else {
+      await ctx.reply(message, keyboard);
+    }
   }
 
   private async handleIngredientsCallback(
@@ -263,7 +296,10 @@ export class TelegramService {
     const session = await this.sessionService.getSession(userId);
 
     if (data === 'ingredient_done') {
-      if (session.ingredients.length === 0) {
+      if (
+        Array.isArray(session?.ingredients) &&
+        session.ingredients.length === 0
+      ) {
         await ctx.answerCbQuery('Please select at least one ingredient!');
         return;
       }
@@ -293,7 +329,9 @@ export class TelegramService {
 
     // Handle ingredient selection/deselection
     const ingredient = data.replace('ingredient_', '');
-    const ingredients = session.ingredients || [];
+    const ingredients = Array.isArray(session?.ingredients)
+      ? [...session.ingredients, ingredient]
+      : [];
 
     if (ingredients.includes(ingredient)) {
       // Remove ingredient
@@ -319,7 +357,9 @@ export class TelegramService {
     ingredient: string,
   ) {
     const session = await this.sessionService.getSession(userId);
-    const ingredients = [...session.ingredients, ingredient.trim()];
+    const ingredients = Array.isArray(session?.ingredients)
+      ? [...session.ingredients, ingredient.trim()]
+      : [];
 
     await this.sessionService.updateSession(userId, {
       ingredients,
@@ -517,7 +557,7 @@ export class TelegramService {
   }
 
   async stopBot() {
-    this.bot.stop('SIGINT');
+    await this.bot.stop('SIGINT');
     this.logger.log('Telegram bot stopped');
   }
 }
