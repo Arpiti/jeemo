@@ -20,7 +20,8 @@ interface GeminiResponse {
 @Injectable()
 export class GeminiService {
   private readonly logger = new Logger(GeminiService.name);
-  private readonly GEMINI_URL = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent';
+  private readonly GEMINI_URL =
+    'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent';
 
   constructor(
     private configService: ConfigService,
@@ -38,7 +39,7 @@ export class GeminiService {
       const apiKey = this.configService.get<string>('GEMINI_API_KEY');
       const headers = {
         'Content-Type': 'application/json',
-        Authorization: `Bearer ${apiKey}`,
+        'X-goog-api-key': apiKey,
       };
       const body = {
         contents: [
@@ -166,7 +167,8 @@ Important:
       return recipesRaw
         .map((recipe: unknown, index: number): Recipe => {
           if (
-            typeof recipe !== 'object' || recipe === null ||
+            typeof recipe !== 'object' ||
+            recipe === null ||
             !('name' in recipe) ||
             !('ingredients' in recipe) ||
             !('steps' in recipe) ||
