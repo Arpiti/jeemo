@@ -330,7 +330,7 @@ export class TelegramService {
     // Handle ingredient selection/deselection
     const ingredient = data.replace('ingredient_', '');
     const ingredients = Array.isArray(session?.ingredients)
-      ? [...session.ingredients, ingredient]
+      ? session?.ingredients
       : [];
 
     if (ingredients.includes(ingredient)) {
