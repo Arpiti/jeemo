@@ -180,6 +180,7 @@ Important:
           }
           const r = recipe as {
             name: string;
+            search_query: string;
             ingredients: unknown[];
             steps: unknown[];
             macros: {
@@ -193,6 +194,7 @@ Important:
           };
           return {
             name: String(r.name).trim(),
+            search_query: String(r.search_query).trim(),
             ingredients: Array.isArray(r.ingredients)
               ? r.ingredients.map((i) => String(i))
               : [],
