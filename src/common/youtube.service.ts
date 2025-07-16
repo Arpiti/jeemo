@@ -36,7 +36,7 @@ export class YouTubeService {
             videoDuration: 'medium', // 4-20 minutes
             key: this.apiKey,
           },
-          timeout: 5000, // 5 second timeout
+          timeout: 10000, // 10 second timeout
         })
       );
 

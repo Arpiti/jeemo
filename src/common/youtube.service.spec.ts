@@ -54,7 +54,7 @@ describe('YouTubeService Integration: search Recipe Videos from youtube (real AP
       console.warn('Skipping integration test: YOUTUBE_API_KEY not set');
       return;
     }
-    const recipeNames = ['Paneer Butter Masala'];
+    const recipeNames = ['Aloo toast (Spiced Potato Sandwich)'];
     const results = await realService.searchMultipleRecipeVideos(recipeNames);
     expect(results).toHaveLength(1);
     expect(results[0]).toMatch(/^https:\/\/www\.youtube\.com\/watch\?v=[\w-]+/);

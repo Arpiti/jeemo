@@ -105,7 +105,7 @@ export class GeminiService {
 Generate exactly 3 ${params.dietType.replace('_', ' ')} ${params.mealType} recipes for ${cuisine} cuisine using these ingredients: ${ingredients}${customIngredient}.
 
 Requirements:
-- Each recipe must use at least 3 of the provided ingredients
+- Each recipe must use at least 1 of the provided ingredients
 - Include ALL necessary ingredients with exact quantities (not just user's ingredients)
 - Provide detailed step-by-step instructions with timing and quantities
 - Calculate accurate nutritional values per serving
