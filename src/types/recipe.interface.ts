@@ -1,5 +1,6 @@
 export interface Recipe {
   name: string;
+  search_query: string;
   ingredients: string[];
   steps: string[];
   macros: {

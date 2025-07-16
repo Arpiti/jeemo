@@ -111,12 +111,14 @@ Requirements:
 - Calculate accurate nutritional values per serving
 - Make recipes practical for home cooking
 - Ensure cuisine authenticity (don't mix incompatible ingredients with wrong cuisines)
+- Include the best possible relevant search query for ya probable outube video for the same recipe
 
 Output format:
 Return ONLY a valid JSON array with this exact structure (no extra text):
 [
   {
     "name": "Recipe Name",
+    "search_query": "Search query/keywords for youtube video for the same recipe",
     "ingredients": [
       "2 cups rice",
       "1 tbsp oil",
@@ -219,6 +221,7 @@ Important:
     // Simple fallback recipes based on meal type and diet
     const fallback = {
       name: 'Simple Vegetable Rice',
+      search_query: 'Simple Vegetable Rice',
       ingredients: ['rice', 'mixed vegetables', 'oil', 'spices'],
       steps: ['Cook rice', 'Sauté vegetables', 'Mix together', 'Serve hot'],
       macros: { calories: 350, protein: 8, carbs: 65, fat: 8 },

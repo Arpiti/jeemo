@@ -30,7 +30,9 @@ export class RecipeService {
       this.logger.log(`Generated ${recipes.length} recipes from Gemini`);
 
       // 2. Enrich with YouTube links (parallel processing)
-      const recipeNames = recipes.map((recipe) => recipe.name);
+      const recipeNames = recipes.map(
+        (recipe) => recipe.search_query ?? recipe.name,
+      );
       const youtubeUrls =
         await this.youtubeService.searchMultipleRecipeVideos(recipeNames);
 
