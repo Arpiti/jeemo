@@ -27,7 +27,7 @@ export class RecipeService {
         customIngredient: session.customIngredient,
       });
 
-      this.logger.log(`Generated ${recipes.length} recipes from OpenAI`);
+      this.logger.log(`Generated ${recipes.length} recipes from Gemini`);
 
       // 2. Enrich with YouTube links (parallel processing)
       const recipeNames = recipes.map((recipe) => recipe.name);
