@@ -86,12 +86,10 @@ export class GeminiService {
   /**
    * Builds a Gemini-optimized prompt for recipe generation.
    * Uses clear instructions, output format specification, and few-shot example.
+   * Creates different prompts based on whether ingredients are provided or not.
    */
   private buildGeminiPrompt(params: RecipeGenerationParams): string {
-    const ingredients =
-      params.ingredients.length > 0
-        ? params.ingredients.join(', ')
-        : 'any available ingredients';
+    const hasIngredients = params.ingredients.length > 0;
     const customIngredient = params.customIngredient
       ? `, and specifically include ${params.customIngredient}`
       : '';
@@ -99,7 +97,26 @@ export class GeminiService {
       params.cuisine === 'surprise_me'
         ? 'any cuisine (surprise me)'
         : params.cuisine.replace('_', ' ');
-    // Gemini best practice: clear, specific, step-by-step, specify output format
+
+    if (hasIngredients) {
+      // System prompt for when ingredients are provided
+      return this.buildPromptWithIngredients(params, cuisine, customIngredient);
+    } else {
+      // System prompt for when no ingredients are provided
+      return this.buildPromptWithoutIngredients(params, cuisine, customIngredient);
+    }
+  }
+
+  /**
+   * Builds prompt when user has provided specific ingredients
+   */
+  private buildPromptWithIngredients(
+    params: RecipeGenerationParams,
+    cuisine: string,
+    customIngredient: string,
+  ): string {
+    const ingredients = params.ingredients.join(', ');
+    
     return `You are a helpful meal planner assistant.
 
 Generate exactly 3 ${params.dietType.replace('_', ' ')} ${params.mealType} recipes for ${cuisine} cuisine using these ingredients: ${ingredients}${customIngredient}.
@@ -111,7 +128,7 @@ Requirements:
 - Calculate accurate nutritional values per serving
 - Make recipes practical for home cooking
 - Ensure cuisine authenticity (don't mix incompatible ingredients with wrong cuisines)
-- Include the best possible relevant search query for ya probable outube video for the same recipe
+- Include the best possible relevant search query for youtube video for the same recipe
 
 Output format:
 Return ONLY a valid JSON array with this exact structure (no extra text):
@@ -147,6 +164,67 @@ Important:
 - Be specific about cooking techniques (chop, dice, sauté, simmer)
 - Nutritional values should be realistic and accurate
 - Ensure cuisine-ingredient compatibility
+- If you cannot generate 3 recipes, return as many as possible in the same format.`;
+  }
+
+  /**
+   * Builds prompt when user has not provided any ingredients
+   */
+  private buildPromptWithoutIngredients(
+    params: RecipeGenerationParams,
+    cuisine: string,
+    customIngredient: string,
+  ): string {
+    return `You are a helpful meal planner assistant.
+
+Generate exactly 3 ${params.dietType.replace('_', ' ')} ${params.mealType} recipes for ${cuisine} cuisine using common household ingredients${customIngredient}.
+
+Requirements:
+- Use common, easily available ingredients that most households would have
+- Focus on simple, accessible recipes that don't require specialty ingredients
+- Include ALL necessary ingredients with exact quantities
+- Provide detailed step-by-step instructions with timing and quantities
+- Calculate accurate nutritional values per serving
+- Make recipes practical for home cooking with basic kitchen equipment
+- Ensure cuisine authenticity while using common ingredients
+- Include the best possible relevant search query for youtube video for the same recipe
+- Prioritize recipes that are budget-friendly and use pantry staples
+
+Output format:
+Return ONLY a valid JSON array with this exact structure (no extra text):
+[
+  {
+    "name": "Recipe Name",
+    "search_query": "Search query/keywords for youtube video for the same recipe",
+    "ingredients": [
+      "2 cups rice",
+      "1 tbsp oil",
+      "1 large onion, chopped",
+      "2 tomatoes, diced"
+    ],
+    "steps": [
+      "Heat 1 tbsp oil in a pan over medium heat (2 minutes)",
+      "Add chopped onions and sauté until golden brown (5-7 minutes)",
+      "Add diced tomatoes and cook until soft (4-5 minutes)"
+    ],
+    "macros": {
+      "calories": 400,
+      "protein": 25,
+      "carbs": 45,
+      "fat": 12
+    },
+    "cookingTime": "25 minutes",
+    "servings": 2
+  }
+]
+
+Important:
+- Output must be valid JSON, no markdown, no extra text
+- Steps must include timing and temperatures where needed
+- Be specific about cooking techniques (chop, dice, sauté, simmer)
+- Nutritional values should be realistic and accurate
+- Ensure cuisine-ingredient compatibility
+- Focus on recipes that use common pantry staples and basic ingredients
 - If you cannot generate 3 recipes, return as many as possible in the same format.`;
   }
 

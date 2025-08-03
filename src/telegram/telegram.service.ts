@@ -270,6 +270,10 @@ export class TelegramService {
         getLocalizedMessage('done', language),
         'ingredient_done',
       ),
+      Markup.button.callback(
+        getLocalizedMessage('skip_ingredients', language),
+        'ingredient_skip',
+      ),
     ]);
 
     const keyboard = Markup.inlineKeyboard(buttons);
@@ -296,15 +300,19 @@ export class TelegramService {
     const session = await this.sessionService.getSession(userId);
 
     if (data === 'ingredient_done') {
-      if (
-        Array.isArray(session?.ingredients) &&
-        session.ingredients.length === 0
-      ) {
-        await ctx.answerCbQuery('Please select at least one ingredient!');
-        return;
-      }
-
+      // Allow proceeding without ingredients - removed mandatory validation
       await this.sessionService.updateSession(userId, {
+        step: ConversationStep.CUISINE,
+      });
+
+      await this.showCuisineSelection(ctx, session.language);
+      return;
+    }
+
+    if (data === 'ingredient_skip') {
+      // Skip ingredients and proceed to cuisine selection
+      await this.sessionService.updateSession(userId, {
+        ingredients: [],
         step: ConversationStep.CUISINE,
       });
 
