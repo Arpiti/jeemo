@@ -565,30 +565,26 @@ export class TelegramService {
         return;
       }
 
-      // Show recipe list
-      const recipeList = this.recipeService.formatRecipeListForDisplay(
-        recipes,
+      // For direct recipe, show the first recipe directly with full details
+      const recipe = recipes[0];
+      const formattedRecipe = this.recipeService.formatRecipeForDisplay(
+        recipe,
         session.language,
       );
 
-      const buttons = recipes.map((recipe, index) => [
-        Markup.button.callback(
-          `${index + 1}. ${recipe.name}`,
-          `recipe_${index}`,
-        ),
+      // Add a "Try Again" button
+      const keyboard = Markup.inlineKeyboard([
+        [
+          Markup.button.callback(
+            getLocalizedMessage('try_again', session.language),
+            'recipe_regenerate',
+          ),
+        ],
       ]);
 
-      buttons.push([
-        Markup.button.callback(
-          getLocalizedMessage('try_again', session.language),
-          'recipe_regenerate',
-        ),
-      ]);
+      await ctx.reply(formattedRecipe, keyboard);
 
-      const keyboard = Markup.inlineKeyboard(buttons);
-      await ctx.reply(recipeList, keyboard);
-
-      // Store recipes in session for later retrieval
+      // Store recipes in session for later retrieval (in case user wants to try again)
       await this.sessionService.updateSession(session.userId, {
         recipes: JSON.stringify(recipes),
       });
