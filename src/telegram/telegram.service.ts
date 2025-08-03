@@ -458,7 +458,7 @@ export class TelegramService {
       ? 'Please batayein ki aap kya banana chahte hain (jaise: paneer bhurji, rajma chawal, etc.):'
       : 'Please tell me what you want to cook (e.g., paneer bhurji, rajma chawal, etc.):';
     
-    await ctx.editMessageText(message);
+    await ctx.reply(message);
   }
 
   private async showCuisineSelection(ctx: Context, language: string) {
@@ -553,13 +553,13 @@ export class TelegramService {
         'generating_recipes',
         session.language,
       );
-      await ctx.editMessageText(loadingMessage);
+      await ctx.reply(loadingMessage);
 
       // Generate direct recipe
       const recipes = await this.recipeService.generateDirectRecipe(session);
 
       if (recipes.length === 0) {
-        await ctx.editMessageText(
+        await ctx.reply(
           'Sorry, no recipes could be generated. Please try again.',
         );
         return;
@@ -586,7 +586,7 @@ export class TelegramService {
       ]);
 
       const keyboard = Markup.inlineKeyboard(buttons);
-      await ctx.editMessageText(recipeList, keyboard);
+      await ctx.reply(recipeList, keyboard);
 
       // Store recipes in session for later retrieval
       await this.sessionService.updateSession(session.userId, {
@@ -594,7 +594,7 @@ export class TelegramService {
       });
     } catch (error) {
       this.logger.error('Failed to generate direct recipe', error);
-      await ctx.editMessageText(
+      await ctx.reply(
         getLocalizedMessage('error_message', session.language),
       );
     }
