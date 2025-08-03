@@ -95,6 +95,18 @@ export class TelegramService {
       return;
     }
 
+    // Handle direct recipe input
+    if (
+      session?.step === ConversationStep.RECIPES &&
+      session?.choice === 'direct' &&
+      text &&
+      typeof text === 'string' &&
+      !text.startsWith('/')
+    ) {
+      await this.handleDirectRecipeInput(ctx, userId, text);
+      return;
+    }
+
     // For other steps, guide user to use buttons
     const message = getLocalizedMessage('error_message', session?.language);
     await ctx.reply(message);
@@ -117,6 +129,9 @@ export class TelegramService {
       switch (session?.step) {
         case ConversationStep.LANGUAGE:
           await this.handleLanguageCallback(ctx, userId, callbackData);
+          break;
+        case ConversationStep.CHOICE:
+          await this.handleChoiceCallback(ctx, userId, callbackData);
           break;
         case ConversationStep.MEAL:
           await this.handleMealCallback(ctx, userId, callbackData);
@@ -164,10 +179,30 @@ export class TelegramService {
 
     await this.sessionService.updateSession(userId, {
       language,
-      step: ConversationStep.MEAL,
+      step: ConversationStep.CHOICE,
     });
 
-    await this.showMealSelection(ctx, language);
+    await this.showChoiceSelection(ctx, language);
+  }
+
+  private async showChoiceSelection(ctx: Context, language: string) {
+    const keyboard = Markup.inlineKeyboard([
+      [
+        Markup.button.callback(
+          getLocalizedMessage('need_suggestions', language),
+          'choice_suggestions',
+        ),
+      ],
+      [
+        Markup.button.callback(
+          getLocalizedMessage('know_recipe', language),
+          'choice_direct',
+        ),
+      ],
+    ]);
+
+    const message = getLocalizedMessage('choice_selection', language);
+    await ctx.editMessageText(message, keyboard);
   }
 
   private async showMealSelection(ctx: Context, language: string) {
@@ -180,6 +215,27 @@ export class TelegramService {
 
     const message = getLocalizedMessage('meal_selection', language);
     await ctx.editMessageText(message, keyboard);
+  }
+
+  private async handleChoiceCallback(ctx: Context, userId: string, data: string) {
+    const choice = data.replace('choice_', '') as 'suggestions' | 'direct';
+    const session = await this.sessionService.updateSession(userId, {
+      choice: choice === 'suggestions' ? 'suggestion' : 'direct',
+    });
+
+    if (choice === 'suggestions') {
+      // Go to the normal suggestion flow
+      await this.sessionService.updateSession(userId, {
+        step: ConversationStep.MEAL,
+      });
+      await this.showMealSelection(ctx, session.language);
+    } else {
+      // Go to direct recipe input
+      await this.sessionService.updateSession(userId, {
+        step: ConversationStep.RECIPES,
+      });
+      await this.showDirectRecipeInput(ctx, session.language);
+    }
   }
 
   private async handleMealCallback(ctx: Context, userId: string, data: string) {
@@ -378,6 +434,33 @@ export class TelegramService {
     await this.showIngredientSelection(ctx, updatedSession);
   }
 
+  private async handleDirectRecipeInput(
+    ctx: Context,
+    userId: string,
+    recipeName: string,
+  ) {
+    const session = await this.sessionService.getSession(userId);
+    
+    // Update session with the direct recipe name
+    await this.sessionService.updateSession(userId, {
+      directMealName: recipeName.trim(),
+    });
+
+    // Generate recipe directly
+    const updatedSession = await this.sessionService.getSession(userId);
+    await this.generateDirectRecipe(ctx, updatedSession);
+  }
+
+  private async showDirectRecipeInput(ctx: Context, language: string) {
+    const message = language === 'hi' 
+      ? 'कृपया बताएं कि आप क्या बनाना चाहते हैं (जैसे: पनीर भुर्जी, राजमा चावल, आदि):'
+      : language === 'hinglish'
+      ? 'Please batayein ki aap kya banana chahte hain (jaise: paneer bhurji, rajma chawal, etc.):'
+      : 'Please tell me what you want to cook (e.g., paneer bhurji, rajma chawal, etc.):';
+    
+    await ctx.editMessageText(message);
+  }
+
   private async showCuisineSelection(ctx: Context, language: string) {
     const keyboard = Markup.inlineKeyboard([
       [Markup.button.callback('🇮🇳 North Indian', 'cuisine_north_indian')],
@@ -457,6 +540,60 @@ export class TelegramService {
       });
     } catch (error) {
       this.logger.error('Failed to generate recipes', error);
+      await ctx.editMessageText(
+        getLocalizedMessage('error_message', session.language),
+      );
+    }
+  }
+
+  private async generateDirectRecipe(ctx: Context, session) {
+    try {
+      // Show loading message
+      const loadingMessage = getLocalizedMessage(
+        'generating_recipes',
+        session.language,
+      );
+      await ctx.editMessageText(loadingMessage);
+
+      // Generate direct recipe
+      const recipes = await this.recipeService.generateDirectRecipe(session);
+
+      if (recipes.length === 0) {
+        await ctx.editMessageText(
+          'Sorry, no recipes could be generated. Please try again.',
+        );
+        return;
+      }
+
+      // Show recipe list
+      const recipeList = this.recipeService.formatRecipeListForDisplay(
+        recipes,
+        session.language,
+      );
+
+      const buttons = recipes.map((recipe, index) => [
+        Markup.button.callback(
+          `${index + 1}. ${recipe.name}`,
+          `recipe_${index}`,
+        ),
+      ]);
+
+      buttons.push([
+        Markup.button.callback(
+          getLocalizedMessage('try_again', session.language),
+          'recipe_regenerate',
+        ),
+      ]);
+
+      const keyboard = Markup.inlineKeyboard(buttons);
+      await ctx.editMessageText(recipeList, keyboard);
+
+      // Store recipes in session for later retrieval
+      await this.sessionService.updateSession(session.userId, {
+        recipes: JSON.stringify(recipes),
+      });
+    } catch (error) {
+      this.logger.error('Failed to generate direct recipe', error);
       await ctx.editMessageText(
         getLocalizedMessage('error_message', session.language),
       );

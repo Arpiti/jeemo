@@ -52,6 +52,41 @@ export class RecipeService {
     }
   }
 
+  async generateDirectRecipe(session: UserSession): Promise<Recipe[]> {
+    try {
+      this.logger.log(`Generating direct recipe for user ${session.userId}`);
+
+      // 1. Generate direct recipe using Gemini
+      const recipes = await this.GeminiService.generateDirectRecipe({
+        mealName: session.directMealName || '',
+        language: session.language,
+      });
+
+      this.logger.log(`Generated ${recipes.length} direct recipes from Gemini`);
+
+      // 2. Enrich with YouTube links (parallel processing)
+      const recipeNames = recipes.map(
+        (recipe) => recipe.search_query ?? recipe.name,
+      );
+      const youtubeUrls =
+        await this.youtubeService.searchMultipleRecipeVideos(recipeNames);
+
+      // 3. Combine recipes with YouTube URLs
+      const enrichedRecipes = recipes.map((recipe, index) => ({
+        ...recipe,
+        youtubeUrl: youtubeUrls[index] || undefined,
+      }));
+
+      this.logger.log(
+        `Enriched ${enrichedRecipes.length} direct recipes with YouTube links`,
+      );
+      return enrichedRecipes;
+    } catch (error) {
+      this.logger.error('Failed to generate direct recipe', error);
+      throw error;
+    }
+  }
+
   formatRecipeForDisplay(recipe: Recipe, language: string = 'en'): string {
     const macros = recipe.macros;
     const servingsText = recipe.servings ? ` (Serves ${recipe.servings})` : '';

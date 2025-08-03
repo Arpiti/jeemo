@@ -1,7 +1,11 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { HttpService } from '@nestjs/axios';
-import { Recipe, RecipeGenerationParams } from '../types/recipe.interface';
+import {
+  Recipe,
+  RecipeGenerationParams,
+  DirectRecipeParams,
+} from '../types/recipe.interface';
 
 // Gemini API response interfaces
 interface GeminiCandidatePart {
@@ -28,7 +32,7 @@ export class GeminiService {
     private httpService: HttpService,
   ) {}
 
-  /**
+    /**
    * Generates recipes using Gemini 2.5 Flash API.
    * @param params RecipeGenerationParams
    * @returns Promise<Recipe[]>
@@ -79,6 +83,61 @@ export class GeminiService {
       return this.parseGeminiRecipeResponse(content);
     } catch (error) {
       this.logger.error('Failed to generate recipes from Gemini', error);
+      return this.getFallbackRecipes();
+    }
+  }
+
+  /**
+   * Generates a direct recipe for a specific meal name using Gemini 2.5 Flash API.
+   * @param params DirectRecipeParams
+   * @returns Promise<Recipe[]>
+   */
+  async generateDirectRecipe(params: DirectRecipeParams): Promise<Recipe[]> {
+    try {
+      const prompt = this.buildDirectRecipePrompt(params);
+      const apiKey = this.configService.get<string>('GEMINI_API_KEY');
+      const headers = {
+        'Content-Type': 'application/json',
+        'X-goog-api-key': apiKey,
+      };
+      const body = {
+        contents: [
+          {
+            role: 'user',
+            parts: [
+              {
+                text: prompt,
+              },
+            ],
+          },
+        ],
+        generationConfig: {
+          temperature: 1.0, // Gemini best practice: 1.0 for creative tasks
+          topP: 0.95,
+          candidateCount: 1,
+        },
+      };
+      const response = await this.httpService
+        .post(this.GEMINI_URL, body, { headers })
+        .toPromise();
+      if (!response) {
+        throw new Error('No response received from Gemini API');
+      }
+      const data: GeminiResponse = response.data as GeminiResponse;
+      const candidates = Array.isArray(data.candidates) ? data.candidates : [];
+      const firstCandidate = candidates[0];
+      const content =
+        firstCandidate &&
+        firstCandidate.content &&
+        Array.isArray(firstCandidate.content.parts)
+          ? firstCandidate.content.parts[0]?.text
+          : undefined;
+      if (!content) {
+        throw new Error('No content received from Gemini');
+      }
+      return this.parseGeminiRecipeResponse(content);
+    } catch (error) {
+      this.logger.error('Failed to generate direct recipe from Gemini', error);
       return this.getFallbackRecipes();
     }
   }
@@ -226,6 +285,62 @@ Important:
 - Ensure cuisine-ingredient compatibility
 - Focus on recipes that use common pantry staples and basic ingredients
 - If you cannot generate 3 recipes, return as many as possible in the same format.`;
+  }
+
+  /**
+   * Builds prompt for direct recipe generation when user knows what they want to cook
+   */
+  private buildDirectRecipePrompt(params: DirectRecipeParams): string {
+    return `You are a helpful meal planner assistant.
+
+Generate exactly 1 detailed recipe for "${params.mealName}" using common household ingredients.
+
+Requirements:
+- Create a complete, detailed recipe for the specific dish requested
+- Use common, easily available ingredients that most households would have
+- Include ALL necessary ingredients with exact quantities
+- Provide detailed step-by-step instructions with timing and quantities
+- Calculate accurate nutritional values per serving
+- Make the recipe practical for home cooking with basic kitchen equipment
+- Include the best possible relevant search query for youtube video for the same recipe
+- Ensure the recipe is authentic and follows traditional cooking methods
+- Make it suitable for home cooks of all skill levels
+
+Output format:
+Return ONLY a valid JSON array with this exact structure (no extra text):
+[
+  {
+    "name": "${params.mealName}",
+    "search_query": "Search query/keywords for youtube video for the same recipe",
+    "ingredients": [
+      "2 cups rice",
+      "1 tbsp oil",
+      "1 large onion, chopped",
+      "2 tomatoes, diced"
+    ],
+    "steps": [
+      "Heat 1 tbsp oil in a pan over medium heat (2 minutes)",
+      "Add chopped onions and sauté until golden brown (5-7 minutes)",
+      "Add diced tomatoes and cook until soft (4-5 minutes)"
+    ],
+    "macros": {
+      "calories": 400,
+      "protein": 25,
+      "carbs": 45,
+      "fat": 12
+    },
+    "cookingTime": "25 minutes",
+    "servings": 2
+  }
+]
+
+Important:
+- Output must be valid JSON, no markdown, no extra text
+- Steps must include timing and temperatures where needed
+- Be specific about cooking techniques (chop, dice, sauté, simmer)
+- Nutritional values should be realistic and accurate
+- Focus on making the recipe accessible and easy to follow
+- If you cannot generate the recipe, return a similar alternative recipe in the same format.`;
   }
 
   /**

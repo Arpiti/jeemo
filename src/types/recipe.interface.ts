@@ -22,3 +22,8 @@ export interface RecipeGenerationParams {
   language: string;
   customIngredient?: string;
 }
+
+export interface DirectRecipeParams {
+  mealName: string;
+  language: string;
+}

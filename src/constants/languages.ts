@@ -8,6 +8,8 @@ export const MESSAGES = {
   en: {
     welcome:
       "Hi! 👩‍🍳 Let's help you decide what to cook today.\nFirst, please select your preferred language:",
+    choice_selection:
+      '🤔 Do you know what you want to cook, or do you need some suggestions?',
     meal_selection: 'Which meal are you planning?',
     diet_selection: "What's your meal type today?",
     ingredient_selection: 'Select what you have in the kitchen (optional):',
@@ -28,12 +30,16 @@ export const MESSAGES = {
     done: 'Done',
     custom_ingredient: 'Enter custom ingredient',
     skip_ingredients: 'Skip Ingredients',
+    need_suggestions: 'I need suggestions',
+    know_recipe: 'I know what to cook',
     more_options: 'More options',
     surprise_me: 'Surprise Me',
   },
   hi: {
     welcome:
       'नमस्ते! 👩‍🍳 आज आप क्या बनाना चाहते हैं, मैं आपकी मदद करूंगी।\nपहले अपनी पसंदीदा भाषा चुनें:',
+    choice_selection:
+      '🤔 क्या आप जानते हैं कि आप क्या बनाना चाहते हैं, या आपको कुछ सुझाव चाहिए?',
     meal_selection: 'आप कौन सा खाना बनाने की योजना बना रहे हैं?',
     diet_selection: 'आज आपका खाना कैसा होगा?',
     ingredient_selection: 'रसोई में आपके पास क्या है उसे चुनें (वैकल्पिक):',
@@ -54,12 +60,16 @@ export const MESSAGES = {
     done: 'हो गया',
     custom_ingredient: 'अपनी सामग्री लिखें',
     skip_ingredients: 'सामग्री छोड़ें',
+    need_suggestions: 'मुझे सुझाव चाहिए',
+    know_recipe: 'मुझे पता है क्या बनाना है',
     more_options: 'और विकल्प',
     surprise_me: 'मुझे सरप्राइज़ करें',
   },
   hinglish: {
     welcome:
       'Hi! 👩‍🍳 Aaj aap kya banana chahte hain, main aapki help karungi.\nPehle apni favorite language choose kariye:',
+    choice_selection:
+      '🤔 Kya aap jante hain ki aap kya banana chahte hain, ya aapko kuch suggestions chahiye?',
     meal_selection: 'Aap konsa meal plan kar rahe hain?',
     diet_selection: 'Aaj aapka khana kaisa hoga?',
     ingredient_selection: 'Kitchen mein aapke paas kya hai select kariye (optional):',
@@ -80,6 +90,8 @@ export const MESSAGES = {
     done: 'Ho Gaya',
     custom_ingredient: 'Apna ingredient likhiye',
     skip_ingredients: 'Ingredients Skip Kariye',
+    need_suggestions: 'Mujhe suggestions chahiye',
+    know_recipe: 'Mujhe pata hai kya banana hai',
     more_options: 'Aur options',
     surprise_me: 'Mujhe Surprise Kariye',
   },

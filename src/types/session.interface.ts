@@ -1,5 +1,6 @@
 export enum ConversationStep {
   LANGUAGE = 'language',
+  CHOICE = 'choice', // New step for choosing between suggestion mode or direct recipe
   MEAL = 'meal',
   DIET = 'diet',
   INGREDIENTS = 'ingredients',
@@ -36,11 +37,13 @@ export interface UserSession {
   userId: string;
   step: ConversationStep;
   language: string;
+  choice?: 'suggestion' | 'direct'; // New field for user's choice
   mealType?: MealType;
   dietType?: DietType;
   ingredients: string[];
   customIngredient?: string;
   cuisine?: CuisineType;
+  directMealName?: string; // New field for direct recipe meal name
   timestamp: Date;
   recipes?: string; // JSON string of Recipe[]
 }
